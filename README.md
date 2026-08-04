@@ -31,3 +31,5 @@ idf.py build flash monitor # builds the project and flashes it. At present `main
 ## Errata
 
 * The build system tends to put a lot of files in the top level directory so I created a `project` directory where the actual project will reside. That way the user won't have to scroll down the page to find the README contents. You're welcome. :D
+* The output sense for the built in LED is reversed between the ESP32 and the ESP32-C3. That doesn't matter for simple on/off sequencing but for more involved signaling it will need to be addressed.
+* The ESP32-C3 will occasionally have trouble associating with the AP and communicating over WiFi in general. Locating it where it has better "line of sight" to the AP seems to help.
