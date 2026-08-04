@@ -9,10 +9,10 @@
 
 static const char *TAG = "proj_wifi";
 
-static EventGroupHandle_t s_wifi_event_group = NULL;
+static EventGroupHandle_t wifi_event_group = NULL;
 
 #define WIFI_MAXIMUM_RETRY   5
-static int s_retry_count = 0;
+static int retry_count = 0;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data)
@@ -21,25 +21,25 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         esp_wifi_connect();
 
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_count < WIFI_MAXIMUM_RETRY) {
+        if (retry_count < WIFI_MAXIMUM_RETRY) {
             esp_wifi_connect();
-            s_retry_count++;
+            retry_count++;
             ESP_LOGW(TAG, "Retrying connection to AP (%d/%d)",
-                     s_retry_count, WIFI_MAXIMUM_RETRY);
+                     retry_count, WIFI_MAXIMUM_RETRY);
         } else {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            xEventGroupSetBits(wifi_event_group, PROJ_WIFI_FAIL_BIT);
             ESP_LOGE(TAG, "Failed to connect after %d attempts", WIFI_MAXIMUM_RETRY);
         }
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_count = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        retry_count = 0;
+        xEventGroupSetBits(wifi_event_group, PROJ_WIFI_CONNECTED_BIT);
     }
 }
 
-esp_err_t init_wifi(void)
+esp_err_t proj_wifi_init(void)
 {
     esp_err_t err;
 
@@ -53,8 +53,8 @@ esp_err_t init_wifi(void)
         return err;
     }
 
-    s_wifi_event_group = xEventGroupCreate();
-    if (s_wifi_event_group == NULL) {
+    wifi_event_group = xEventGroupCreate();
+    if (wifi_event_group == NULL) {
         return ESP_ERR_NO_MEM;
     }
 
@@ -82,19 +82,19 @@ esp_err_t init_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "init_wifi() complete, connection in progress");
+    ESP_LOGI(TAG, "proj_wifi_init() complete, connection in progress");
     return ESP_OK;
 }
 
-EventGroupHandle_t wifi_get_event_group(void)
+EventGroupHandle_t proj_wifi_get_event_group(void)
 {
-    return s_wifi_event_group;
+    return wifi_event_group;
 }
 
-bool wifi_wait_connected(TickType_t timeout_ticks)
+bool proj_wifi_wait_connected(TickType_t timeout_ticks)
 {
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group,
+                                            PROJ_WIFI_CONNECTED_BIT | PROJ_WIFI_FAIL_BIT,
                                             pdFALSE, pdFALSE, timeout_ticks);
-    return (bits & WIFI_CONNECTED_BIT) != 0;
+    return (bits & PROJ_WIFI_CONNECTED_BIT) != 0;
 }
