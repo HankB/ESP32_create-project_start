@@ -23,6 +23,7 @@ cd project
 idf.py create-project start # I ran once, you don;t need to unless starting your own project.
 cd start
 idf.py set-target esp32c3
+cp components/proj_wifi/secrets.h.example components/proj_wifi/secrets.h # fill in creds
 idf.py build flash monitor # builds the project and flashes it. At present `main()` is empty.
 ```
 
