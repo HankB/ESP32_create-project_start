@@ -7,6 +7,8 @@
 #include "esp_netif_sntp.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_err.h"
+
 
 static const char *TAG = "proj_sntp";
 
@@ -84,4 +86,17 @@ esp_err_t proj_sntp_init(void)
 
     ESP_LOGI(TAG, "proj_sntp_init() complete, sync in progress");
     return ESP_OK;
+}
+
+EventGroupHandle_t proj_sntp_get_event_group(void)
+{
+    return sntp_event_group;
+}
+
+bool proj_sntp_wait_synced(TickType_t timeout_ticks)
+{
+    EventBits_t bits = xEventGroupWaitBits(sntp_event_group,
+                                            PROJ_SNTP_TIME_SET_BIT,
+                                            pdFALSE, pdFALSE, timeout_ticks);
+    return (bits & PROJ_SNTP_TIME_SET_BIT) != 0;
 }
