@@ -14,6 +14,21 @@ static EventGroupHandle_t wifi_event_group = NULL;
 #define WIFI_MAXIMUM_RETRY   5
 static int retry_count = 0;
 
+/* Returns ESP_OK if the call succeeded OR if the underlying subsystem was
+ * already initialized (ESP_ERR_INVALID_STATE). Any other error is real. */
+static esp_err_t ensure_ok_or_already_done(esp_err_t err, const char *what)
+{
+    if (err == ESP_OK) {
+        return ESP_OK;
+    }
+    if (err == ESP_ERR_INVALID_STATE) {
+        ESP_LOGD(TAG, "%s already initialized, continuing", what);
+        return ESP_OK;
+    }
+    ESP_LOGE(TAG, "%s failed: %s", what, esp_err_to_name(err));
+    return err;
+}
+
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data)
 {
@@ -53,13 +68,22 @@ esp_err_t proj_wifi_init(void)
         return err;
     }
 
+    err = ensure_ok_or_already_done(esp_netif_init(), "esp_netif_init");
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = ensure_ok_or_already_done(esp_event_loop_create_default(),
+                                     "esp_event_loop_create_default");
+    if (err != ESP_OK) {
+        return err;
+    }
+
     wifi_event_group = xEventGroupCreate();
     if (wifi_event_group == NULL) {
         return ESP_ERR_NO_MEM;
     }
 
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -93,6 +117,10 @@ EventGroupHandle_t proj_wifi_get_event_group(void)
 
 bool proj_wifi_wait_connected(TickType_t timeout_ticks)
 {
+    if (wifi_event_group == NULL) {
+        return false;
+    }
+
     EventBits_t bits = xEventGroupWaitBits(wifi_event_group,
                                             PROJ_WIFI_CONNECTED_BIT | PROJ_WIFI_FAIL_BIT,
                                             pdFALSE, pdFALSE, timeout_ticks);
