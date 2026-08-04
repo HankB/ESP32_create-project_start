@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "proj_wifi.h"
 #include "proj_sntp.h"
@@ -13,12 +14,15 @@ static void led_blink_task(void *pvParameters)
 {
     gpio_reset_pin(CONFIG_BLINK_GPIO);
     gpio_set_direction(CONFIG_BLINK_GPIO, GPIO_MODE_OUTPUT);
+    static const TickType_t blink_delay = 1000;
 
     while (1) {
         gpio_set_level(CONFIG_BLINK_GPIO, 1);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        if (proj_sntp_time_synced()) printf("%lld hi at seconds\n", time(0));
+        vTaskDelay(pdMS_TO_TICKS(blink_delay));
         gpio_set_level(CONFIG_BLINK_GPIO, 0);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        if (proj_sntp_time_synced()) printf("%lld lo at seconds\n", time(0));
+        vTaskDelay(pdMS_TO_TICKS(blink_delay));
     }
 }
 
