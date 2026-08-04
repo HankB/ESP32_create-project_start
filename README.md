@@ -10,6 +10,7 @@ As of early 2026 I have several projects that use the 5.x version of the librari
 
 ## Status
 
+* 2026-08-04 Working WiFi
 * 2026-08-03 Builds and flashes the on board LED for both ESP32 and ESP32-C3.
 
 ## Build
