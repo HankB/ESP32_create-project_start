@@ -1,0 +1,10 @@
+menu "LED Configuration"
+
+config BLINK_GPIO
+    int "Blink GPIO number"
+    default 2 if IDF_TARGET_ESP32
+    default 8 if IDF_TARGET_ESP32C3
+    help
+        GPIO number for the onboard LED.
+
+endmenu
