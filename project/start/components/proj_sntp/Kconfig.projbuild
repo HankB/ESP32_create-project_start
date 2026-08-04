@@ -1,0 +1,18 @@
+menu "Project SNTP Configuration"
+
+    config PROJ_SNTP_SERVER_PRIMARY
+        string "Primary NTP server (optional)"
+        default ""
+        help
+            Primary NTP server hostname or IP - e.g. your router's LAN IP
+            if it provides NTP service. Leave blank to skip and use only
+            the backup server below.
+
+    config PROJ_SNTP_SERVER_BACKUP
+        string "Backup NTP server"
+        default "pool.ntp.org"
+        help
+            Used as a fallback if the primary server is unreachable, or as
+            the sole server if PROJ_SNTP_SERVER_PRIMARY is left blank.
+
+endmenu

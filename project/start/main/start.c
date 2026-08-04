@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "proj_wifi.h"
+#include "proj_sntp.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -28,8 +29,11 @@ void app_main(void)
     // ...
     proj_wifi_init();
     if (proj_wifi_wait_connected(pdMS_TO_TICKS(10000))) {
-        ESP_LOGI("start", "WiFi connected");
-    } else {
-        ESP_LOGE("start", "WiFi connection failed or timed out");
-    }    
+        proj_sntp_init();
+        if (proj_sntp_wait_synced(pdMS_TO_TICKS(10000))) {
+            ESP_LOGI("start", "Time synchronized");
+        } else {
+            ESP_LOGW("start", "SNTP sync timed out — will keep retrying in background");
+        }
+    }
 }
