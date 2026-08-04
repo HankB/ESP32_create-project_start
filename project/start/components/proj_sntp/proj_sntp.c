@@ -95,6 +95,8 @@ EventGroupHandle_t proj_sntp_get_event_group(void)
 
 bool proj_sntp_wait_synced(TickType_t timeout_ticks)
 {
+    if( NULL == sntp_event_group)
+        return false;
     EventBits_t bits = xEventGroupWaitBits(sntp_event_group,
                                             PROJ_SNTP_TIME_SET_BIT,
                                             pdFALSE, pdFALSE, timeout_ticks);
