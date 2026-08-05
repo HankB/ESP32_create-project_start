@@ -117,17 +117,13 @@ bool proj_mqtt_wait_connected(TickType_t timeout_ticks)
     return (bits & PROJ_MQTT_CONNECTED_BIT) != 0;
 }
 
-int proj_mqtt_publish(const char *location, const char *measurement,
-                       const char *payload, int qos, bool retain)
+int proj_mqtt_publish(const char *topic,
+    const char *payload, int qos, bool retain);
 {
     if (mqtt_client == NULL) {
         ESP_LOGW(TAG, "proj_mqtt_publish() called before proj_mqtt_init()");
         return -1;
     }
-
-    char topic[128];
-    snprintf(topic, sizeof(topic), "HA/%s/%s/%s", proj_wifi_get_hostname(),
-        location, measurement);
 
     /* len=0 tells esp-mqtt to use strlen(payload) internally. */
     return esp_mqtt_client_publish(mqtt_client, topic, payload, 0,

@@ -53,8 +53,8 @@ static inline bool proj_mqtt_connected(void)
  * publish could not be queued (e.g. proj_mqtt_init() not yet called).
  * A non-negative return does NOT guarantee delivery for QoS 0.
  */
-int proj_mqtt_publish(const char *location, const char *measurement,
-                       const char *payload, int qos, bool retain);
+int proj_mqtt_publish(const char *topic,
+    const char *payload, int qos, bool retain);
 
 #ifdef __cplusplus
 }
