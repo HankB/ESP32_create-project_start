@@ -45,13 +45,6 @@ static inline bool proj_mqtt_connected(void)
 }
 
 /*
- * Returns this device's generated hostname/client ID ("esp32-XXXXXX"), as
- * used for both the MQTT client ID and the topic prefix. Valid only after
- * proj_mqtt_init() has been called.
- */
-const char *proj_mqtt_get_hostname(void);
-
-/*
  * Publishes payload to topic "HA/<hostname>/<location>/<measurement>",
  * matching the existing Pi topic/payload convention. qos must be 0, 1,
  * or 2; retain follows normal MQTT retained-message semantics.

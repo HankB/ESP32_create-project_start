@@ -48,6 +48,13 @@ static inline bool proj_wifi_connected(void)
     return proj_wifi_wait_connected(0);
 }
 
+/*
+ * Returns this device's generated hostname/client ID ("esp32-XXXXXX"), as
+ * used for both the MQTT client ID and the topic prefix. Valid only after
+ * proj_mqtt_init() has been called.
+ */
+const char *proj_wifi_get_hostname(void);
+
 #ifdef __cplusplus
 }
 #endif

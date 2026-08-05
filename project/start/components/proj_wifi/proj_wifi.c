@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "nvs_flash.h"
+#include "esp_mac.h"
 
 static const char *TAG = "proj_wifi";
 
@@ -13,6 +14,15 @@ static EventGroupHandle_t wifi_event_group = NULL;
 
 #define WIFI_MAXIMUM_RETRY   5
 static int retry_count = 0;
+static char hostname[16] = "";   /* "esp32-" + 6 hex chars + nul */
+
+static void generate_hostname(void)
+{
+    uint8_t mac[6];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    snprintf(hostname, sizeof(hostname), "esp32-%02x%02x%02x",
+             mac[3], mac[4], mac[5]);
+}
 
 /* Returns ESP_OK if the call succeeded OR if the underlying subsystem was
  * already initialized (ESP_ERR_INVALID_STATE). Any other error is real. */
@@ -67,6 +77,9 @@ esp_err_t proj_wifi_init(void)
     if (err != ESP_OK) {
         return err;
     }
+
+    generate_hostname();
+    ESP_LOGI(TAG, "MQTT client ID / topic prefix: %s", hostname);
 
     err = ensure_ok_or_already_done(esp_netif_init(), "esp_netif_init");
     if (err != ESP_OK) {
@@ -125,4 +138,12 @@ bool proj_wifi_wait_connected(TickType_t timeout_ticks)
                                             PROJ_WIFI_CONNECTED_BIT | PROJ_WIFI_FAIL_BIT,
                                             pdFALSE, pdFALSE, timeout_ticks);
     return (bits & PROJ_WIFI_CONNECTED_BIT) != 0;
+}
+
+const char *proj_wifi_get_hostname(void)
+{
+    if(0 == hostname[0]) {
+        return "unknown";
+    }
+    return hostname;
 }

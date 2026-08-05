@@ -1,9 +1,9 @@
 #include "proj_mqtt.h"
+#include "proj_wifi.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#include "esp_mac.h"
 #include "esp_netif.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -13,7 +13,6 @@ static const char *TAG = "proj_mqtt";
 
 static EventGroupHandle_t mqtt_event_group = NULL;
 static esp_mqtt_client_handle_t mqtt_client = NULL;
-static char hostname[16];   /* "esp32-" + 6 hex chars + nul */
 
 static esp_err_t ensure_ok_or_already_done(esp_err_t err, const char *what)
 {
@@ -26,14 +25,6 @@ static esp_err_t ensure_ok_or_already_done(esp_err_t err, const char *what)
     }
     ESP_LOGE(TAG, "%s failed: %s", what, esp_err_to_name(err));
     return err;
-}
-
-static void generate_hostname(void)
-{
-    uint8_t mac[6];
-    esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    snprintf(hostname, sizeof(hostname), "esp32-%02x%02x%02x",
-             mac[3], mac[4], mac[5]);
 }
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
@@ -80,12 +71,9 @@ esp_err_t proj_mqtt_init(void)
         return ESP_ERR_NO_MEM;
     }
 
-    generate_hostname();
-    ESP_LOGI(TAG, "MQTT client ID / topic prefix: %s", hostname);
-
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = CONFIG_PROJ_MQTT_BROKER_URI,
-        .credentials.client_id = hostname,
+        .credentials.client_id = proj_wifi_get_hostname(),
     };
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
@@ -129,11 +117,6 @@ bool proj_mqtt_wait_connected(TickType_t timeout_ticks)
     return (bits & PROJ_MQTT_CONNECTED_BIT) != 0;
 }
 
-const char *proj_mqtt_get_hostname(void)
-{
-    return hostname;
-}
-
 int proj_mqtt_publish(const char *location, const char *measurement,
                        const char *payload, int qos, bool retain)
 {
@@ -143,7 +126,8 @@ int proj_mqtt_publish(const char *location, const char *measurement,
     }
 
     char topic[128];
-    snprintf(topic, sizeof(topic), "HA/%s/%s/%s", hostname, location, measurement);
+    snprintf(topic, sizeof(topic), "HA/%s/%s/%s", proj_wifi_get_hostname(),
+        location, measurement);
 
     /* len=0 tells esp-mqtt to use strlen(payload) internally. */
     return esp_mqtt_client_publish(mqtt_client, topic, payload, 0,
