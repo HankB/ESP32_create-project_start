@@ -20,6 +20,11 @@ As of early 2026 I have several projects that use the 5.x version of the librari
 * 2026-08-04 Working WiFi
 * 2026-08-03 Builds and flashes the on board LED for both ESP32 and ESP32-C3.
 
+## Plans
+
+* Additional diagnostics which can be usedul for further testing.
+* OTA updates.
+
 ## Build
 
 ```text
@@ -39,3 +44,4 @@ idf.py build flash monitor # builds the project and flashes it. At present `main
 * The output sense for the built in LED is reversed between the ESP32 and the ESP32-C3. That doesn't matter for simple on/off sequencing but for more involved signaling it will need to be addressed.
 * The ESP32-C3 will occasionally have trouble associating with the AP and communicating over WiFi in general. Locating it where it has better "line of sight" to the AP seems to help.
 * I have been working with an ESP32-C3 which connects to Linux as `/dev/ttyACM0` and an ESP32 WROOM which connects as `/dev/ttyUSB0`
+* Whenever the target is changed (`idf.py set-target [esp32|esp32c3]`) the MQTT broker URI reverts to the default.
