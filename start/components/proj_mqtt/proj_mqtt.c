@@ -13,6 +13,12 @@ static const char *TAG = "proj_mqtt";
 
 static EventGroupHandle_t mqtt_event_group = NULL;
 static esp_mqtt_client_handle_t mqtt_client = NULL;
+static char status_topic[64];
+
+static uint32_t mqtt_connect_count = 0;
+static uint32_t mqtt_disconnect_count = 0;
+static uint32_t mqtt_publish_success_count = 0;
+static uint32_t mqtt_publish_fail_count = 0;
 
 static esp_err_t ensure_ok_or_already_done(esp_err_t err, const char *what)
 {
@@ -37,10 +43,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     switch ((esp_mqtt_event_id_t) event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "Connected to broker");
+        mqtt_connect_count++;
         xEventGroupSetBits(mqtt_event_group, PROJ_MQTT_CONNECTED_BIT);
+        esp_mqtt_client_publish(mqtt_client, status_topic, "online",
+                                 strlen("online"), 1, 1);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGW(TAG, "Disconnected from broker");
+        mqtt_disconnect_count++;
         xEventGroupClearBits(mqtt_event_group, PROJ_MQTT_CONNECTED_BIT);
         break;
     case MQTT_EVENT_ERROR:
@@ -71,9 +81,19 @@ esp_err_t proj_mqtt_init(void)
         return ESP_ERR_NO_MEM;
     }
 
+    /* generate_hostname() is idempotent - safe to call again here even if
+     * proj_wifi_init() (or start.c directly) already called it. */
+    const char *host = generate_hostname();
+    snprintf(status_topic, sizeof(status_topic), "CM/%s/system/status", host);
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = CONFIG_PROJ_MQTT_BROKER_URI,
-        .credentials.client_id = proj_wifi_get_hostname(),
+        .credentials.client_id = host,
+        .session.last_will.topic = status_topic,
+        .session.last_will.msg = "offline",
+        .session.last_will.msg_len = strlen("offline"),
+        .session.last_will.qos = 1,
+        .session.last_will.retain = true,
     };
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
@@ -110,22 +130,46 @@ bool proj_mqtt_wait_connected(TickType_t timeout_ticks)
     if (mqtt_event_group == NULL) {
         return false;
     }
-
     EventBits_t bits = xEventGroupWaitBits(mqtt_event_group,
                                             PROJ_MQTT_CONNECTED_BIT,
                                             pdFALSE, pdFALSE, timeout_ticks);
     return (bits & PROJ_MQTT_CONNECTED_BIT) != 0;
 }
 
-int proj_mqtt_publish(const char *topic,
-    const char *payload, int qos, bool retain)
+int proj_mqtt_publish(const char *topic, const char *payload, int qos, bool retain)
 {
     if (mqtt_client == NULL) {
         ESP_LOGW(TAG, "proj_mqtt_publish() called before proj_mqtt_init()");
+        mqtt_publish_fail_count++;
         return -1;
     }
 
-    /* len=0 tells esp-mqtt to use strlen(payload) internally. */
-    return esp_mqtt_client_publish(mqtt_client, topic, payload, 0,
-                                    qos, retain ? 1 : 0);
+    int msg_id = esp_mqtt_client_publish(mqtt_client, topic, payload, 0,
+                                          qos, retain ? 1 : 0);
+    if (msg_id < 0) {
+        mqtt_publish_fail_count++;
+    } else {
+        mqtt_publish_success_count++;
+    }
+    return msg_id;
+}
+
+uint32_t proj_mqtt_get_connect_count(void)
+{
+    return mqtt_connect_count;
+}
+
+uint32_t proj_mqtt_get_disconnect_count(void)
+{
+    return mqtt_disconnect_count;
+}
+
+uint32_t proj_mqtt_get_publish_success_count(void)
+{
+    return mqtt_publish_success_count;
+}
+
+uint32_t proj_mqtt_get_publish_fail_count(void)
+{
+    return mqtt_publish_fail_count;
 }
