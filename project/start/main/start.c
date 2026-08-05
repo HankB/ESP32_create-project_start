@@ -3,6 +3,7 @@
 
 #include "proj_wifi.h"
 #include "proj_sntp.h"
+#include "proj_mqtt.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -38,6 +39,10 @@ void app_main(void)
             ESP_LOGI("start", "Time synchronized");
         } else {
             ESP_LOGW("start", "SNTP sync timed out — will keep retrying in background");
+        }
+        proj_mqtt_init();
+        if (proj_mqtt_wait_connected(pdMS_TO_TICKS(10000))) {
+            proj_mqtt_publish("system", "boot", "1", 0, false);
         }
     }
 }

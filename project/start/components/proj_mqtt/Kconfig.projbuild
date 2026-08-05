@@ -1,0 +1,13 @@
+menu "Project MQTT Configuration"
+
+    config PROJ_MQTT_BROKER_URI
+        string "MQTT broker URI"
+        default "mqtt://mqtt:1883"
+        help
+            Full broker URI including scheme and port, e.g. mqtt://mqtt:1883
+            for the production broker (hostname "mqtt"), or
+            mqtt://192.168.x.x:1883 for a test broker. Anonymous,
+            unencrypted connection - intended for use only within a
+            trusted, isolated IoT VLAN.
+
+endmenu
