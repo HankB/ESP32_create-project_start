@@ -118,7 +118,7 @@ bool proj_mqtt_wait_connected(TickType_t timeout_ticks)
 }
 
 int proj_mqtt_publish(const char *topic,
-    const char *payload, int qos, bool retain);
+    const char *payload, int qos, bool retain)
 {
     if (mqtt_client == NULL) {
         ESP_LOGW(TAG, "proj_mqtt_publish() called before proj_mqtt_init()");

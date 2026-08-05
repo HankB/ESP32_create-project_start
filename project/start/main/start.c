@@ -10,12 +10,21 @@
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 #include "esp_log.h"
+char topic[128];
+
+// build a reusable topic. 
+// MUST be called after proj_wifi_init() which initializes the hostname
+// that proj_wifi_get_hostname() returns.
+static void build_topic(const char *location, const char *measurement)
+{
+    snprintf(topic, sizeof(topic), "HA/%s/%s/%s", proj_wifi_get_hostname(), location, measurement);
+}
 
 static void led_blink_task(void *pvParameters)
 {
     gpio_reset_pin(CONFIG_BLINK_GPIO);
     gpio_set_direction(CONFIG_BLINK_GPIO, GPIO_MODE_OUTPUT);
-    static const TickType_t blink_delay = 1000;
+    static const TickType_t blink_delay = 250;
 
     while (1) {
         gpio_set_level(CONFIG_BLINK_GPIO, 1);
@@ -42,7 +51,17 @@ void app_main(void)
         }
         proj_mqtt_init();
         if (proj_mqtt_wait_connected(pdMS_TO_TICKS(10000))) {
-            proj_mqtt_publish("system", "boot", "1", 0, false);
+            proj_mqtt_publish("CS/ESP32", "boot", 0, false);
         }
+    }
+    // just loop and publish periodically
+    build_topic("lab", "testing");
+    static size_t max_payload = 128;
+    char    payload[max_payload];
+    static const int publish_delay = 10 * 1000;
+    while(true) {
+        snprintf(payload, sizeof(payload), "{ \"t\": %lld, \"device\":\"SNTP\" }", time(0));
+        proj_mqtt_publish(topic, payload, 0, false);
+        vTaskDelay(pdMS_TO_TICKS(publish_delay));
     }
 }
