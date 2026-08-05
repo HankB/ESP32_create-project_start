@@ -39,6 +39,14 @@ EventGroupHandle_t proj_wifi_get_event_group(void);
  */
 bool proj_wifi_wait_connected(TickType_t timeout_ticks);
 
+/* 
+ * Generate a hostname in the form "esp32-nnnnnn" where nnnnnn is the hex
+ * representation if the last three bytes of the MAC address.
+ * This does not depend on WiFi initialization and can be called at
+ * any time.
+ */
+const char * generate_hostname(void);
+
 /*
  * Convenience non-blocking status check. Equivalent to
  * proj_wifi_wait_connected(0) - returns immediately with current state.

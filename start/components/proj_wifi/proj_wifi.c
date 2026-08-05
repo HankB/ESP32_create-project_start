@@ -16,12 +16,13 @@ static EventGroupHandle_t wifi_event_group = NULL;
 static int retry_count = 0;
 static char hostname[16] = "";   /* "esp32-" + 6 hex chars + nul */
 
-static void generate_hostname(void)
+const char * generate_hostname(void)
 {
     uint8_t mac[6];
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
     snprintf(hostname, sizeof(hostname), "esp32-%02x%02x%02x",
              mac[3], mac[4], mac[5]);
+    return hostname;
 }
 
 /* Returns ESP_OK if the call succeeded OR if the underlying subsystem was
@@ -78,7 +79,7 @@ esp_err_t proj_wifi_init(void)
         return err;
     }
 
-    generate_hostname();
+    generate_hostname(); // could also be called elsewhere.
     ESP_LOGI(TAG, "MQTT client ID / topic prefix: %s", hostname);
 
     err = ensure_ok_or_already_done(esp_netif_init(), "esp_netif_init");
