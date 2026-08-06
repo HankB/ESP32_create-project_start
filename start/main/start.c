@@ -25,19 +25,44 @@ static const char * build_topic(const char *prefix, const char *location, const 
     return topic;
 }
 
+/*
+ * ESP32 WROOM is active high
+ * ESP32-C3 mini is active low
+ */
+#define LED_ACTIVE_LOW    1  // Set to 0 if active high
+
+#if LED_ACTIVE_LOW
+#define LED_ON    0  
+#define LED_OFF   1
+#else
+  #define LED_ON    1   
+  #define LED_OFF   0
+#endif
+
+static void blink(uint count)
+{
+    while(count--) {
+        gpio_set_level(CONFIG_BLINK_GPIO, LED_ON);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        gpio_set_level(CONFIG_BLINK_GPIO, LED_OFF);
+        vTaskDelay(pdMS_TO_TICKS(150));
+    }
+}
 static void led_blink_task(void *pvParameters)
 {
     gpio_reset_pin(CONFIG_BLINK_GPIO);
     gpio_set_direction(CONFIG_BLINK_GPIO, GPIO_MODE_OUTPUT);
-    static const TickType_t blink_delay = 250;
+    static const TickType_t blink_delay = 1000;
 
     while (1) {
-        gpio_set_level(CONFIG_BLINK_GPIO, 1);
-        if (proj_sntp_time_synced()) printf("%lld hi at seconds\n", time(0));
-        vTaskDelay(pdMS_TO_TICKS(blink_delay));
-        gpio_set_level(CONFIG_BLINK_GPIO, 0);
-        if (proj_sntp_time_synced()) printf("%lld lo at seconds\n", time(0));
-        vTaskDelay(pdMS_TO_TICKS(blink_delay));
+        if( proj_mqtt_connected())
+            blink(3);
+        else if(proj_wifi_connected())
+            blink(2);
+        else
+            blink(1);
+
+        vTaskDelay(pdMS_TO_TICKS(blink_delay));        
     }
 }
 
