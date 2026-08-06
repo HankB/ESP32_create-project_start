@@ -63,6 +63,14 @@ static inline bool proj_wifi_connected(void)
  */
 const char *proj_wifi_get_hostname(void);
 
+/*
+ * Various WiFi event counters and stats
+ */
+uint32_t proj_wifi_get_connect_count(void);
+uint32_t proj_wifi_get_disconnect_count(void);
+uint8_t proj_wifi_get_last_disconnect_reason(void);
+bool proj_wifi_get_rssi(int8_t *rssi_out);
+
 #ifdef __cplusplus
 }
 #endif

@@ -56,6 +56,14 @@ static inline bool proj_mqtt_connected(void)
 int proj_mqtt_publish(const char *topic,
     const char *payload, int qos, bool retain);
 
+/*
+ * Various MQTT event counters
+ */
+uint32_t proj_mqtt_get_connect_count(void);
+uint32_t proj_mqtt_get_disconnect_count(void);
+uint32_t proj_mqtt_get_publish_success_count(void);
+uint32_t proj_mqtt_get_publish_fail_count(void);
+
 #ifdef __cplusplus
 }
 #endif

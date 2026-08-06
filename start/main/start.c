@@ -61,15 +61,25 @@ void app_main(void)
     }
     // just loop and publish periodically
     build_topic("HA", "lab", "testing");
-    static size_t max_payload = 128;
+    static size_t max_payload = 256;
     char    payload[max_payload];
     static const int publish_delay = 10 * 1000;
     while(true) {
         int rssi;
         if( ESP_OK != esp_wifi_sta_get_rssi(&rssi)) rssi=0;
         snprintf(payload, sizeof(payload), 
-            "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"SNTP\" }",
-            time(0), esp_timer_get_time()/1000000, rssi);
+            "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"ESP32\"," 
+            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u]}",
+            time(0), esp_timer_get_time()/1000000, rssi,
+            proj_mqtt_get_connect_count(),
+            proj_mqtt_get_disconnect_count(),
+            proj_mqtt_get_publish_success_count(),
+            proj_mqtt_get_publish_fail_count(),
+            proj_wifi_get_connect_count(),
+            proj_wifi_get_disconnect_count(),
+            (uint)proj_wifi_get_last_disconnect_reason()
+            
+        );
         proj_mqtt_publish(topic, payload, 0, false);
         vTaskDelay(pdMS_TO_TICKS(publish_delay));
     }
