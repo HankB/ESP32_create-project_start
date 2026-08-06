@@ -46,3 +46,8 @@ idf.py build flash monitor # builds the project and flashes it. At present `main
 * The ESP32-C3 will occasionally have trouble associating with the AP and communicating over WiFi in general. Locating it where it has better "line of sight" to the AP seems to help.
 * I have been working with an ESP32-C3 which connects to Linux as `/dev/ttyACM0` and an ESP32 WROOM which connects as `/dev/ttyUSB0`
 * Whenever the target is changed (`idf.py set-target [esp32|esp32c3]`) the MQTT broker URI reverts to the default.
+* Apparently the way that the one wire bus (RMT) driver works, it produces the following harmless warning:
+
+```text
+W (5798) rmt: GPIO 4 is not usable, maybe conflict with others
+```
