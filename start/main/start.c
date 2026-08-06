@@ -12,6 +12,8 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
+#include "proj_ds18b20.h"
+#include "math.h"
 
 char topic[128];
 const char * hostname;
@@ -29,7 +31,7 @@ static const char * build_topic(const char *prefix, const char *location, const 
  * ESP32 WROOM is active high
  * ESP32-C3 mini is active low
  */
-#define LED_ACTIVE_LOW    1  // Set to 0 if active high
+#define LED_ACTIVE_LOW    0  // Set to 0 if active high
 
 #if LED_ACTIVE_LOW
 #define LED_ON    0  
@@ -66,9 +68,39 @@ static void led_blink_task(void *pvParameters)
     }
 }
 
+#include "proj_ds18b20.h"
+#include "math.h"
+
+static void ds18b20_task(void *arg)
+{
+    proj_ds18b20_init();
+    int n = proj_ds18b20_get_device_count();
+    float temps[CONFIG_PROJ_DS18B20_MAX_DEVICES];
+
+    while (1) {
+        if (n > 0) {
+            proj_ds18b20_read_all(temps, n);
+            for (int i = 0; i < n; i++) {
+                if (!isnan(temps[i])) {
+                    char topic[96];
+                    char payload[16];
+                    /* "location" here is a placeholder - see note below */
+                    snprintf(topic, sizeof(topic), "HA/%s/%s/temperature",
+                             generate_hostname(), "roaming");
+                    snprintf(payload, sizeof(payload), "%.2f", temps[i]);
+                    proj_mqtt_publish(topic, payload, 0, false);
+                }
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(15000));
+    }
+}
+
 void app_main(void)
 {
     xTaskCreate(led_blink_task, "led_blink", 2048, NULL, 5, NULL);
+    xTaskCreate(ds18b20_task, "read_ds18b20", 2048, NULL, 5, NULL);
+
     hostname = generate_hostname();
 
     proj_wifi_init();
@@ -84,6 +116,9 @@ void app_main(void)
             proj_mqtt_publish(build_topic("CS", "lab", "status"), "boot", 0, false);
         }
     }
+
+    proj_ds18b20_init();
+        
     // just loop and publish periodically
     build_topic("HA", "lab", "testing");
     static size_t max_payload = 256;

@@ -1,0 +1,19 @@
+menu "Project DS18B20 Configuration"
+
+    config PROJ_DS18B20_GPIO
+        int "DS18B20 1-Wire bus GPIO"
+        default 4
+        help
+            GPIO connected to the DS18B20 data line. GPIO4 is commonly
+            free on both ESP32 and ESP32-C3 boards, but - as with
+            PROJ_BLINK_GPIO - check your specific board's pinout and
+            strapping-pin list before relying on the default.
+
+    config PROJ_DS18B20_MAX_DEVICES
+        int "Maximum DS18B20 devices per bus"
+        default 4
+        help
+            Upper bound on how many DS18B20 devices proj_ds18b20_init()
+            will enumerate on a single bus.
+
+endmenu
