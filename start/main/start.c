@@ -94,9 +94,10 @@ static void ds18b20_task(void *arg)
             proj_ds18b20_read_all(temps, n);
             for (int i = 0; i < n; i++) {
                 if (!isnan(temps[i])) {
-                    char payload[16];
+                    char payload[64];
                     /* "location" here is a placeholder - see note below */
-                    snprintf(payload, sizeof(payload), "%.2f", temps[i]*9.0/5.0 + 32.0);
+                    snprintf(payload, sizeof(payload), "{\"t\":%lld, \"temp\":%.2f, \"device\":\"DS18B20\"}",
+                        time(0), temps[i]*9.0/5.0 + 32.0);
                     proj_mqtt_publish(topics[i], payload, 0, false);
                 }
             }
