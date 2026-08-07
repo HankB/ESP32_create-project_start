@@ -76,19 +76,28 @@ static void ds18b20_task(void *arg)
     proj_ds18b20_init();
     int n = proj_ds18b20_get_device_count();
     float temps[CONFIG_PROJ_DS18B20_MAX_DEVICES];
+    static const size_t topic_len=96;
+    char topics[CONFIG_PROJ_DS18B20_MAX_DEVICES][topic_len];
+
+    /*
+     * Topics for my use are required to be distinct for each sensor so
+     * they will include the sensor ID to achieve that.
+     */
+    for(int i=0; i<n; i++) {
+        snprintf(topics[i], topic_len, "HA/%s/%s/temperature_",
+                 generate_hostname(), "roaming");
+        proj_ds18b20_get_address_string(i, topics[i]+strlen(topics[i]), topic_len - strlen(topics[i]) );
+    }
 
     while (1) {
         if (n > 0) {
             proj_ds18b20_read_all(temps, n);
             for (int i = 0; i < n; i++) {
                 if (!isnan(temps[i])) {
-                    char topic[96];
                     char payload[16];
                     /* "location" here is a placeholder - see note below */
-                    snprintf(topic, sizeof(topic), "HA/%s/%s/temperature",
-                             generate_hostname(), "roaming");
-                    snprintf(payload, sizeof(payload), "%.2f", temps[i]);
-                    proj_mqtt_publish(topic, payload, 0, false);
+                    snprintf(payload, sizeof(payload), "%.2f", temps[i]*9.0/5.0 + 32.0);
+                    proj_mqtt_publish(topics[i], payload, 0, false);
                 }
             }
         }
