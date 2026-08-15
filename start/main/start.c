@@ -19,6 +19,24 @@
 char topic[128];
 const char * hostname;
 
+/*
+ * Target specific stuff
+ * ESP32 (on board LED) is active high
+ * ESP32-C3 mini is active low
+ */
+
+#if CONFIG_IDF_TARGET_ESP32
+    static const char* device="ESP32";
+    #define LED_ON    1  
+    #define LED_OFF   0
+#elif CONFIG_IDF_TARGET_ESP32C3
+    static const char* device="ESP32-C3";
+    #define LED_ON    0   
+    #define LED_OFF   1
+#else
+    #error please populate the target settings
+#endif
+
 // build a reusable topic. 
 // MUST be called after proj_wifi_init() which initializes the hostname
 // that proj_wifi_get_hostname() returns.
@@ -149,9 +167,9 @@ void app_main(void)
         int rssi;
         if( ESP_OK != esp_wifi_sta_get_rssi(&rssi)) rssi=0;
         snprintf(payload, sizeof(payload), 
-            "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"ESP32\"," 
+            "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"%s\"," 
             " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u] %s}",
-            time(0), esp_timer_get_time()/1000000, rssi,
+            time(0), esp_timer_get_time()/1000000, rssi, device,
             proj_mqtt_get_connect_count(),
             proj_mqtt_get_disconnect_count(),
             proj_mqtt_get_publish_success_count(),
