@@ -32,6 +32,27 @@ esp_err_t proj_ota_confirm_boot_ok(void);
  */
 esp_err_t proj_ota_init(void);
 
+/*
+ * Returns the label ("ota_0" or "ota_1") of the currently running
+ * partition - i.e. which slot this boot came from.
+ */
+const char *proj_ota_get_running_slot(void);
+
+/*
+ * Writes a JSON key:value fragment (no surrounding braces) summarizing
+ * OTA state into buf, e.g.:
+ *   "slot":"ota_0","ota_0":"valid","ota_1":"pending_verify"
+ *
+ * Intended to be spliced directly into a larger JSON message you're
+ * building elsewhere, e.g.:
+ *   snprintf(msg, sizeof(msg), "{\"uptime\":%lu,%s}",
+ *            uptime_s, proj_ota_json_stats(buf, sizeof(buf)));
+ *
+ * buf_len should be at least 96 bytes to comfortably fit all three
+ * fields. Returns buf, for convenient inline use as shown above.
+ */
+const char *proj_ota_json_stats(char *buf, size_t buf_len);
+
 #ifdef __cplusplus
 }
 #endif

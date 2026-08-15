@@ -141,13 +141,16 @@ void app_main(void)
     build_topic("HA", "lab", "testing");
     static size_t max_payload = 256;
     char    payload[max_payload];
+    static size_t max_ota = 256;
+    char    ota_stats[max_ota];
+
     static const int publish_delay = 10 * 1000;
     while(true) {
         int rssi;
         if( ESP_OK != esp_wifi_sta_get_rssi(&rssi)) rssi=0;
         snprintf(payload, sizeof(payload), 
             "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"ESP32\"," 
-            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u]}",
+            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u] %s}",
             time(0), esp_timer_get_time()/1000000, rssi,
             proj_mqtt_get_connect_count(),
             proj_mqtt_get_disconnect_count(),
@@ -155,10 +158,13 @@ void app_main(void)
             proj_mqtt_get_publish_fail_count(),
             proj_wifi_get_connect_count(),
             proj_wifi_get_disconnect_count(),
-            (uint)proj_wifi_get_last_disconnect_reason()
-            
+            (uint)proj_wifi_get_last_disconnect_reason(),
+            proj_ota_json_stats(ota_stats, max_ota)
+
         );
+
         proj_mqtt_publish(topic, payload, 0, false);
+                
         vTaskDelay(pdMS_TO_TICKS(publish_delay));
     }
 }
