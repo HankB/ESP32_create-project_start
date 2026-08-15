@@ -4,6 +4,7 @@
 #include "proj_wifi.h"
 #include "proj_sntp.h"
 #include "proj_mqtt.h"
+#include "proj_ota.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -127,6 +128,13 @@ void app_main(void)
         }
     }
 
+    // ... after WiFi and MQTT connect:
+    if (proj_wifi_wait_connected(pdMS_TO_TICKS(10000)) &&
+        proj_mqtt_wait_connected(pdMS_TO_TICKS(10000))) {
+        proj_ota_confirm_boot_ok();   /* only meaningful/reached if both succeeded */
+        proj_ota_init();
+    }
+    
     proj_ds18b20_init();
         
     // just loop and publish periodically

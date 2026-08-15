@@ -64,6 +64,21 @@ uint32_t proj_mqtt_get_disconnect_count(void);
 uint32_t proj_mqtt_get_publish_success_count(void);
 uint32_t proj_mqtt_get_publish_fail_count(void);
 
+typedef void (*proj_mqtt_data_cb_t)(const char *topic, const char *data, int data_len);
+
+/*
+ * Registers a callback for messages on `topic`. Up to
+ * PROJ_MQTT_MAX_SUBSCRIPTIONS may be registered. Subscriptions are
+ * re-issued automatically on every reconnect (MQTT sessions are not
+ * persistent in this component's configuration, so the broker forgets
+ * subscriptions across a disconnect/reconnect cycle - this handles that
+ * transparently).
+ *
+ * `data` passed to the callback is null-terminated and valid only for the
+ * duration of the callback - copy it if you need it afterward.
+ */
+esp_err_t proj_mqtt_subscribe(const char *topic, int qos, proj_mqtt_data_cb_t cb);
+
 #ifdef __cplusplus
 }
 #endif

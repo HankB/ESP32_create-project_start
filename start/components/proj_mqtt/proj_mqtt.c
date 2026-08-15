@@ -20,6 +20,22 @@ static uint32_t mqtt_disconnect_count = 0;
 static uint32_t mqtt_publish_success_count = 0;
 static uint32_t mqtt_publish_fail_count = 0;
 
+#define PROJ_MQTT_MAX_SUBSCRIPTIONS 4
+#define PROJ_MQTT_MAX_TOPIC_LEN     64
+#define PROJ_MQTT_MAX_DATA_LEN      256   /* generous for a URL; not a full-message reassembly buffer */
+
+typedef struct {
+    char topic[PROJ_MQTT_MAX_TOPIC_LEN];
+    int qos;
+    proj_mqtt_data_cb_t cb;
+    bool in_use;
+} subscription_t;
+
+static subscription_t subscriptions[PROJ_MQTT_MAX_SUBSCRIPTIONS];
+
+
+static void resubscribe_all(void);
+
 static esp_err_t ensure_ok_or_already_done(esp_err_t err, const char *what)
 {
     if (err == ESP_OK) {
@@ -47,7 +63,33 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
         xEventGroupSetBits(mqtt_event_group, PROJ_MQTT_CONNECTED_BIT);
         esp_mqtt_client_publish(mqtt_client, status_topic, "online",
                                  strlen("online"), 1, 1);
+        resubscribe_all();
         break;
+    
+    case MQTT_EVENT_DATA: {
+        /*
+         * NB: This does not handle long payloads that are sent in multiple messages and
+         * require reassembly.
+         */
+        esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t) event_data;
+        char topic_buf[PROJ_MQTT_MAX_TOPIC_LEN];
+        int tlen = event->topic_len < (PROJ_MQTT_MAX_TOPIC_LEN - 1) ? event->topic_len : (PROJ_MQTT_MAX_TOPIC_LEN - 1);
+        memcpy(topic_buf, event->topic, tlen);
+        topic_buf[tlen] = '\0';
+    
+        char data_buf[PROJ_MQTT_MAX_DATA_LEN];
+        int dlen = event->data_len < (PROJ_MQTT_MAX_DATA_LEN - 1) ? event->data_len : (PROJ_MQTT_MAX_DATA_LEN - 1);
+        memcpy(data_buf, event->data, dlen);
+        data_buf[dlen] = '\0';
+    
+        for (int i = 0; i < PROJ_MQTT_MAX_SUBSCRIPTIONS; i++) {
+            if (subscriptions[i].in_use && strcmp(subscriptions[i].topic, topic_buf) == 0) {
+                subscriptions[i].cb(topic_buf, data_buf, dlen);
+                break;
+            }
+        }
+        break;
+    }
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGW(TAG, "Disconnected from broker");
         mqtt_disconnect_count++;
@@ -172,4 +214,37 @@ uint32_t proj_mqtt_get_publish_success_count(void)
 uint32_t proj_mqtt_get_publish_fail_count(void)
 {
     return mqtt_publish_fail_count;
+}
+
+/*
+ * Support MQTT subscription used to trigger OTA update
+ */
+
+esp_err_t proj_mqtt_subscribe(const char *topic, int qos, proj_mqtt_data_cb_t cb)
+{
+    for (int i = 0; i < PROJ_MQTT_MAX_SUBSCRIPTIONS; i++) {
+        if (!subscriptions[i].in_use) {
+            strncpy(subscriptions[i].topic, topic, PROJ_MQTT_MAX_TOPIC_LEN - 1);
+            subscriptions[i].topic[PROJ_MQTT_MAX_TOPIC_LEN - 1] = '\0';
+            subscriptions[i].qos = qos;
+            subscriptions[i].cb = cb;
+            subscriptions[i].in_use = true;
+
+            if (mqtt_client != NULL && proj_mqtt_connected()) {
+                esp_mqtt_client_subscribe(mqtt_client, topic, qos);
+            }
+            return ESP_OK;
+        }
+    }
+    ESP_LOGE(TAG, "No free subscription slots (max %d)", PROJ_MQTT_MAX_SUBSCRIPTIONS);
+    return ESP_ERR_NO_MEM;
+}
+
+static void resubscribe_all(void)
+{
+    for (int i = 0; i < PROJ_MQTT_MAX_SUBSCRIPTIONS; i++) {
+        if (subscriptions[i].in_use) {
+            esp_mqtt_client_subscribe(mqtt_client, subscriptions[i].topic, subscriptions[i].qos);
+        }
+    }
 }
