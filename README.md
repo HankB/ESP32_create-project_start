@@ -14,7 +14,7 @@ As of early 2026 I have several projects that use the 5.x version of the librari
 
 ## Status
 
-* 2026-08-15 Add OTA update (./OTA.md)
+* 2026-08-15 Add OTA update ([OTA notes](./OTA.md))
 * 2026-08-06 Add sensor ID string to topic
 * 2026-08-06 Add DS18B20 sensor(s)
 * Original goal is complete. I still need to add a sensor. At present this code publishes a timestamp every 10s.
