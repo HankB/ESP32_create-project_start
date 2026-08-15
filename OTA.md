@@ -58,9 +58,10 @@ or when the dev host and target are on different VLANS and the ESP cannot reach 
 
 ```text
 export iot_host=spartan
-ssh "$iot_host" "mkdir -p firmware/esp32"
-scp ./start/build/start.bin "${iot_host}:firmware/esp32/"
-ssh "$iot_host" "cd firmware/esp32/; python3 -m http.server 8080"
+export target=esp32c3
+ssh "$iot_host" "mkdir -p firmware/${target}"
+scp ./start/build/start.bin "${iot_host}:firmware/${target}/"
+ssh "$iot_host" "cd firmware/${target}/; python3 -m http.server 8080"
 ```
 
 Sanity check that firmware can be served:
@@ -73,5 +74,6 @@ curl -I "http://{$iot_host}:8080/start.bin" # substitute whatever hostname you s
 Publish the trigger, substituting the publisher hostname and the ESP hostname.
 
 ```text
-mosquitto_pub -h $iot_host -t HA/esp32-b9ae04/system/ota -m "http://${iot_host}:8080/start.bin"
+esp_host=esp32-998610
+mosquitto_pub -h $iot_host -t HA/${esp_host}/system/ota -m "http://${iot_host}:8080/start.bin"
 ```
