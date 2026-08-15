@@ -58,7 +58,7 @@ or when the dev host and target are on different VLANS and the ESP cannot reach 
 
 ```text
 export iot_host=spartan
-ssh "$iot_host" -c "mkdir -p firmware/esp32"
+ssh "$iot_host" "mkdir -p firmware/esp32"
 scp ./start/build/start.bin "${iot_host}:firmware/esp32/"
 ssh "$iot_host" "cd firmware/esp32/; python3 -m http.server 8080"
 ```
