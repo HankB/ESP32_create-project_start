@@ -46,20 +46,6 @@ static const char * build_topic(const char *prefix, const char *location, const 
     return topic;
 }
 
-/*
- * ESP32 WROOM is active high
- * ESP32-C3 mini is active low
- */
-#define LED_ACTIVE_LOW    0  // Set to 0 if active high
-
-#if LED_ACTIVE_LOW
-#define LED_ON    0  
-#define LED_OFF   1
-#else
-  #define LED_ON    1   
-  #define LED_OFF   0
-#endif
-
 static void blink(uint count)
 {
     while(count--) {
@@ -69,19 +55,33 @@ static void blink(uint count)
         vTaskDelay(pdMS_TO_TICKS(150));
     }
 }
+#define BOOT_BUTTON 0
 static void led_blink_task(void *pvParameters)
 {
     gpio_reset_pin(CONFIG_BLINK_GPIO);
+    gpio_reset_pin(BOOT_BUTTON);
     gpio_set_direction(CONFIG_BLINK_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(BOOT_BUTTON, GPIO_MODE_INPUT);
     static const TickType_t blink_delay = 1000;
+    static bool blink_enabled = true;
 
     while (1) {
-        if( proj_mqtt_connected())
-            blink(3);
-        else if(proj_wifi_connected())
-            blink(2);
-        else
-            blink(1);
+        /*
+         * Cheap logic - if you hold the button about 1s, the state of flashing
+         * will invert. Too long - too short - who knows!
+         */
+        if(!gpio_get_level(BOOT_BUTTON)) {
+            blink_enabled = !blink_enabled;
+        }
+
+        if(blink_enabled) {
+            if( proj_mqtt_connected())
+                blink(3);
+            else if(proj_wifi_connected())
+                blink(2);
+            else
+                blink(1);
+        }
 
         vTaskDelay(pdMS_TO_TICKS(blink_delay));        
     }
