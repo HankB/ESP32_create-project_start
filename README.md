@@ -52,3 +52,8 @@ idf.py build flash monitor # builds the project and flashes it. At present `main
 ```text
 W (5798) rmt: GPIO 4 is not usable, maybe conflict with others
 ```
+
+* When switching to a different target (e.g. esp32c3) The following paramters return to their default and must be reset.
+  * Flash size 2MB -> 4MB
+  * MQTT URI
+  * Default SNTP server and number of servers.
