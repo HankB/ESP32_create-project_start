@@ -168,7 +168,7 @@ void app_main(void)
         if( ESP_OK != esp_wifi_sta_get_rssi(&rssi)) rssi=0;
         snprintf(payload, sizeof(payload), 
             "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"%s\"," 
-            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u] %s}",
+            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u], %s}",
             time(0), esp_timer_get_time()/1000000, rssi, device,
             proj_mqtt_get_connect_count(),
             proj_mqtt_get_disconnect_count(),
