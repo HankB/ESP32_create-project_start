@@ -40,6 +40,10 @@ cp components/proj_wifi/secrets.h.example components/proj_wifi/secrets.h # fill 
 idf.py build flash monitor # builds the project and flashes it. At present `main()` is empty.
 ```
 
+## Helpers
+
+* `.../bin/publish_ota.sh` - Push .bin file to a remote host where it can be published for OTA updates. Useful for me to keep targets and the corresponding binaries straight and put the binaries on a host where devices on my IoT LAN can fetch them.
+
 ## References
 
 Links to information that documents `idf.py save-defconfig`
