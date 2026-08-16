@@ -84,7 +84,7 @@ static void ota_command_handler(const char *topic, const char *data, int data_le
 esp_err_t proj_ota_init(void)
 {
     char topic[64];
-    snprintf(topic, sizeof(topic), "HA/%s/system/ota", generate_hostname());
+    snprintf(topic, sizeof(topic), "CM/%s/system/ota", generate_hostname());
 
     esp_err_t err = proj_mqtt_subscribe(topic, 1, ota_command_handler);
     if (err == ESP_OK) {

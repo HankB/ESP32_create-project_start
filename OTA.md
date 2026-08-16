@@ -45,35 +45,35 @@ $EDITOR components/proj_ota/CMakeLists.txt
 
 ## 2026-08-15 Flash an update
 
-Give the `.bin` its own directory and run the server there.
-
-```
-mkdir -p firmware/esp32 # in the top directory of the project, last component naming the target architecture
-cp start/build/start.bin firmware/esp32/
-cd firmware/esp32
-python3 -m http.server 8080
-```
-
-or when the dev host and target are on different VLANS and the ESP cannot reach the dev host due to firewall rules. Use `spartan` ehich is on th IoT VLAN.
+Give the `.bin` its own directory path and run the server there. The path will include the project name and device name and will be rooted in an arbitrary location. Running the server will be rather ad-hoc but can be enshrined in Systemd if desired. The commands are tailored to be run on a diffrent host (which needs to be reachable by the ESP device.)
 
 ```text
-export iot_host=spartan
-export target=esp32c3
-ssh "$iot_host" "mkdir -p firmware/${target}"
-scp ./start/build/start.bin "${iot_host}:firmware/${target}/"
-ssh "$iot_host" "cd firmware/${target}/; python3 -m http.server 8080"
+cd /path/to/ESP32_create-project_start/start
+export iot_host=spartan # substitute whatever hostname you serve from.
+export target=esp32
+export project=ESP32_create-project_start
+ssh "$iot_host" "mkdir -p firmware/${project}/${target}"
+scp build/start.bin "${iot_host}:firmware/${project}/${target}/"
+ssh "$iot_host" "cd firmware/; python3 -m http.server 8080"
 ```
 
 Sanity check that firmware can be served:
 
 ```text
+export iot_host=spartan # substitute whatever hostname you serve from.
+export target=esp32
+export project=ESP32_create-project_start
 cd /tmp
-curl -I "http://{$iot_host}:8080/start.bin" # substitute whatever hostname you serve from.
+curl -I "http://{$iot_host}:8080/${project}/${target}/start.bin" 
 ```
 
 Publish the trigger, substituting the publisher hostname and the ESP hostname.
 
 ```text
-esp_host=esp32-998610
-mosquitto_pub -h $iot_host -t HA/${esp_host}/system/ota -m "http://${iot_host}:8080/start.bin"
+export iot_host=spartan # substitute whatever hostname you serve from.
+export target=esp32
+export project=ESP32_create-project_start
+esp_host=esp32-b987b0
+esp_host=esp32-486ab4
+mosquitto_pub -h $iot_host -t CM/${esp_host}/system/ota -m "http://${iot_host}:8080/${project}/${target}/start.bin"
 ```
