@@ -40,6 +40,13 @@ cp components/proj_wifi/secrets.h.example components/proj_wifi/secrets.h # fill 
 idf.py build flash monitor # builds the project and flashes it. At present `main()` is empty.
 ```
 
+## References
+
+Links to information that documents `idf.py save-defconfig`
+
+* <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/kconfig/configuration_structure.html>
+* <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/kconfig-reference.html>
+
 ## Errata
 
 * The build system tends to put a lot of files in the top level directory so I created a `project` directory where the actual project will reside. That way the user won't have to scroll down the page to find the README contents. You're welcome. ... Never mind! the `start/` directory created by `idf.py create-project start` serves this function without the extra directory level.
@@ -53,7 +60,7 @@ idf.py build flash monitor # builds the project and flashes it. At present `main
 W (5798) rmt: GPIO 4 is not usable, maybe conflict with others
 ```
 
-* When switching to a different target (e.g. esp32c3) The following paramters return to their default and must be reset.
+* When switching to a different target (e.g. esp32c3) The following paramters return to their default and must be reset. (These have been resolved using `idf.py save-defconfig`)
   * Flash size 2MB -> 4MB
   * MQTT URI
   * Default SNTP server and number of servers.
