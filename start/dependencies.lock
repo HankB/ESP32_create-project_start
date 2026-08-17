@@ -40,5 +40,5 @@ direct_dependencies:
 - espressif/onewire_bus
 - idf
 manifest_hash: 730d5427e6e3fbdb21940638d4254900f7e375134e4647596e8c7b61aa0f3790
-target: esp32
+target: esp32c3
 version: 3.0.0
