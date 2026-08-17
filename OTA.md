@@ -45,6 +45,8 @@ $EDITOR components/proj_ota/CMakeLists.txt
 
 ## 2026-08-15 Flash an update
 
+I have automated the following (with Claude's help) in `../bin/publish_ota.sh`.
+
 Give the `.bin` its own directory path and run the server there. The path will include the project name and device name and will be rooted in an arbitrary location. Running the server will be rather ad-hoc but can be enshrined in Systemd if desired. The commands are tailored to be run on a diffrent host (which needs to be reachable by the ESP device.)
 
 ```text
