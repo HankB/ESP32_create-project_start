@@ -162,13 +162,13 @@ void app_main(void)
     static size_t max_ota = 256;
     char    ota_stats[max_ota];
 
-    static const int publish_delay = 10 * 1000;
+    static const int publish_delay = 10 * 1000 * 60 * 15; // 150 minutes
     while(true) {
         int rssi;
         if( ESP_OK != esp_wifi_sta_get_rssi(&rssi)) rssi=0;
         snprintf(payload, sizeof(payload), 
             "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"device\":\"%s\"," 
-            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u], %s}",
+            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u], %s, \"ver\":\"0.5.0\"}",
             time(0), esp_timer_get_time()/1000000, rssi, device,
             proj_mqtt_get_connect_count(),
             proj_mqtt_get_disconnect_count(),
