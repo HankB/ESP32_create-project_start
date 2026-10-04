@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVER_HOST="spartan"
+SERVER_HOST="pilog3b"
 SERVER_PORT="8080"
-FIRMWARE_ROOT="firmware"   # relative to $SERVER_HOST's home directory
+FIRMWARE_ROOT="/var/local/OTA"   # relative to $SERVER_HOST's home directory
 
 # Run from the ESP-IDF project directory (where sdkconfig lives).
 if [[ ! -f sdkconfig ]]; then
@@ -35,8 +35,8 @@ BIN_NAME=$(basename "$BIN_PATH")
 REMOTE_DIR="${FIRMWARE_ROOT}/${PROJECT_NAME}/${TARGET}"
 
 echo "Publishing $BIN_NAME ($TARGET) to ${SERVER_HOST}:${REMOTE_DIR}/"
-ssh "$SERVER_HOST" "mkdir -p ~/${REMOTE_DIR}"
-scp "$BIN_PATH" "${SERVER_HOST}:~/${REMOTE_DIR}/"
+ssh "$SERVER_HOST" "mkdir -p ${REMOTE_DIR}"
+scp "$BIN_PATH" "${SERVER_HOST}:${REMOTE_DIR}/"
 
 URL="http://${SERVER_HOST}:${SERVER_PORT}/${PROJECT_NAME}/${TARGET}/${BIN_NAME}"
 echo "URL: $URL"
