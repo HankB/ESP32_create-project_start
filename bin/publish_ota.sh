@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# https://github.com/HankB/ESP32_create-project_start/blob/main/bin/publish_ota.sh
+# from https://github.com/HankB/ESP32_create-project_start
+
 set -euo pipefail
 
 SERVER_HOST="pilog3b"
