@@ -13,6 +13,7 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
+#include "esp_idf_version.h"
 #include "proj_ds18b20.h"
 #include "math.h"
 
@@ -168,7 +169,7 @@ void app_main(void)
         if( ESP_OK != esp_wifi_sta_get_rssi(&rssi)) rssi=0;
         snprintf(payload, sizeof(payload), 
             "{ \"t\": %lld, \"uptime\":%lld, \"rssi\":%d, \"chip_type\":\"%s\"," 
-            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u], %s, \"ver\":\"0.5.2\"}",
+            " \"mqtt_stats\":[%ld, %ld, %ld, %ld], \"wifi_stats\":[%lu, %lu, %u], %s, \"ver\":\"0.6.1\", \"esp-idf_ver\":\"%s\"}",
             time(0), esp_timer_get_time()/1000000, rssi, device,
             proj_mqtt_get_connect_count(),
             proj_mqtt_get_disconnect_count(),
@@ -177,7 +178,8 @@ void app_main(void)
             proj_wifi_get_connect_count(),
             proj_wifi_get_disconnect_count(),
             (uint)proj_wifi_get_last_disconnect_reason(),
-            proj_ota_json_stats(ota_stats, max_ota)
+            proj_ota_json_stats(ota_stats, max_ota),
+            esp_get_idf_version()
 
         );
 
